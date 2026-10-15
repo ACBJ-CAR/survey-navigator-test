@@ -1,6 +1,8 @@
-# Survey navigator
+# ACBJ Survey Navigator
 
-TKTK
+ACBJ Survey Navigator is a browser-based prototype for a guided, adaptive
+business survey. The experience is designed to feel clear and conversational,
+with one step at a time and a persistent BizEstimate area.
 
 *Reporter: Ethan Nelson*
 
@@ -8,54 +10,59 @@ TKTK
 
 ## Project goal
 
-*TK: Briefly describe this project*
+Build an approachable survey that helps business respondents review and share
+information about their company. This repository currently contains the
+responsive application foundation only; questionnaire content and response
+persistence are planned for later stages.
 
 ## Methodology
 
-*TK: Link to or state methodology here*
+The prototype's survey methodology and question inventory have not yet been
+defined. No production industry taxonomy, NAICS mapping, or valuation formula
+is included.
 
 ## Data sources
 
-### TK Source 1
+No survey data sources are configured in this foundation stage.
 
-Source: *TK: source attribution (e.g. U.S. Census Bureau)*
+## Browser application
 
-Source URL: *TK: source URL*
+The browser application uses React, TypeScript, and Vite. Node.js 20.19+ or
+22.12+ is required by Vite 7.
 
-*TK: any notes or links about the source go here*
+1. Run `npm install` to install the application dependencies.
+2. Run `npm run dev` and open the local URL printed by Vite.
+3. Run `npm run build` to type-check and create a production build in `dist/`.
+4. Run `npm run lint` to lint the project.
+5. Run `npm test` to run the automated tests.
 
-### TK Source 2
+The current shell previews the survey sections but does not collect or save
+responses. The visible “Progress saved” status is a UI placeholder, not evidence
+of persistence. The BizEstimate card shows its initial state and does not
+calculate or display a valuation.
 
-Source: *TK: source attribution (e.g. U.S. Census Bureau)*
-
-Source URL: *TK: source url*
-
-*TK: any notes or links about the source go here*
-
-## Project usage
+## Notebook and data workflow
 
 **Cloning the GitHub repo**
 
 1. Run `git clone git@github.com:ACBJ-CAR/survey-navigator-test.git`
-2. Run `uv sync` to create the virtual environment and install all dependencies from `pyproject.toml`.
+2. Run `uv sync` to create the virtual environment and install all Python dependencies from `pyproject.toml`.
 3. Run `datakit data pull` to retrieve the data files.
 4. Run `uv run pre-commit install` to add pre-commit hooks. This ensures consistent formatting and runs code checks before committing code.
 
 **Making edits**
 
+1. Run `uv run jupyter lab` or open a notebook in VS Code.
 
-1. Run `uv run jupyter labs` or open notebook in VS Code
-> Reminder: Git is not tracking or saving notebooks. Instead, using jupytext, notebooks are synced with a .py file. Any changes made in either file sync with the other paired file when you save. If you are using VS Code for editing your notebooks, you must have the "Jupytext Sync" VS code extension.
+> Reminder: Git is not tracking or saving notebooks. Instead, using jupytext, notebooks are synced with a .py file. Any changes made in either file sync with the other paired file when you save. If you are using VS Code for editing your notebooks, you must have the "Jupytext Sync" VS Code extension.
 
+**Committing changes to GitHub**
 
-
-**Commiting changes to GitHub**
-
-1. Run `git add . &&  git commit -m "describe message of changes here"`
+1. Run `git add . && git commit -m "describe message of changes here"`
 2. Run `git push origin main`
 3. Run `datakit data push`
 
-
 ## Data notes
 
-* Add important caveats, limitations, and source contact info here.
+Add important caveats and source contact information here when data sources are
+introduced.

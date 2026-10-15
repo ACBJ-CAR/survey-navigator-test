@@ -2,6 +2,8 @@
 .env
 .Renviron
 .venv
+node_modules/
+dist/
 .quarto
 .DS_Store
 .ipynb_checkpoints
