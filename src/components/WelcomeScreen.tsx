@@ -1,13 +1,20 @@
 type WelcomeScreenProps = {
   onStart: () => void;
   onResume: () => void;
+  onStartReturning: () => void;
+  hasSavedProgress: boolean;
 };
 
-export function WelcomeScreen({ onStart, onResume }: WelcomeScreenProps) {
+export function WelcomeScreen({
+  onStart,
+  onResume,
+  onStartReturning,
+  hasSavedProgress,
+}: WelcomeScreenProps) {
   return (
     <main className="welcome-page">
       <header className="site-header welcome-header">
-        <a className="wordmark" href="/" aria-label="ACBJ Survey Navigator home">
+        <a className="wordmark" href={import.meta.env.BASE_URL} aria-label="ACBJ Survey Navigator home">
           <span className="wordmark-mark" aria-hidden="true">
             A
           </span>
@@ -25,18 +32,24 @@ export function WelcomeScreen({ onStart, onResume }: WelcomeScreenProps) {
             <span>one step at a time.</span>
           </h1>
           <p className="welcome-description">
-            A guided survey that helps us understand your business. It’s
-            straightforward, secure, and you can pick up where you left off.
+            A guided survey that helps us understand your business. Take it one
+            step at a time, confirm what we already know, and come back whenever
+            you’re ready.
           </p>
           <div className="welcome-actions">
             <button className="button button-primary" onClick={onStart}>
               Start survey
               <span aria-hidden="true">→</span>
             </button>
-            <button className="button button-secondary" onClick={onResume}>
-              Resume survey
-            </button>
+            {hasSavedProgress && (
+              <button className="button button-secondary" onClick={onResume}>
+                Resume survey
+              </button>
+            )}
           </div>
+          <button className="text-button demo-returning-link" onClick={onStartReturning}>
+            Try a synthetic returning-business demo
+          </button>
           <p className="welcome-note">
             Take your time. You can review each step as you go.
           </p>

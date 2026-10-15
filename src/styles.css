@@ -398,10 +398,29 @@ p {
 }
 
 .progress-list li {
+  min-height: 42px;
+}
+
+.progress-item {
   display: flex;
+  width: 100%;
   min-height: 42px;
   align-items: center;
   gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.progress-item[aria-current="step"] .progress-label {
+  color: #173c36;
+  font-weight: 700;
+}
+
+.progress-item:hover .progress-label {
+  color: var(--green-dark);
 }
 
 .progress-marker {
@@ -461,6 +480,12 @@ p {
   margin: 9px 0 0;
   color: #74827d;
   font-size: 11px;
+}
+
+.progress-item:focus-visible {
+  border-radius: 5px;
+  outline: 3px solid #d06f50;
+  outline-offset: 3px;
 }
 
 .sidebar-estimate {
@@ -589,6 +614,394 @@ p {
   border-top: 1px solid #e1e8e2;
 }
 
+.question-flow-wrap,
+.review-card {
+  width: min(100%, 720px);
+}
+
+.question-flow-card {
+  width: 100%;
+}
+
+.question-counter,
+.question-index {
+  color: #75847e;
+  font-size: 12px;
+}
+
+.question-counter {
+  margin: 0 0 14px;
+}
+
+.question-index {
+  margin: 14px 0 0;
+  text-align: right;
+}
+
+.question-flow-card .eyebrow {
+  text-transform: capitalize;
+}
+
+.question-help {
+  margin: 18px 0;
+  padding: 13px 15px;
+  border: 1px solid #dfe9e2;
+  border-radius: 9px;
+  background: #f5f9f5;
+  color: #4f6960;
+  font-size: 13px;
+}
+
+.question-help summary {
+  color: #28614f;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.question-help p {
+  margin: 9px 0 0;
+  line-height: 1.65;
+}
+
+.question-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  margin-top: 27px;
+}
+
+.question-fields.is-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 18px;
+  row-gap: 18px;
+}
+
+.question-fields.is-group .answer-choice-field,
+.question-fields.is-group .answer-field:has(textarea) {
+  grid-column: 1 / -1;
+}
+
+.answer-field {
+  min-width: 0;
+}
+
+fieldset.answer-choice-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.answer-choice-field legend {
+  width: 100%;
+  padding: 0;
+}
+
+.answer-label {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 8px;
+  color: #2d4841;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.required-mark {
+  color: #657873;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.answer-field input:not([type="radio"]):not([type="checkbox"]),
+.answer-field textarea {
+  width: 100%;
+  min-height: 49px;
+  padding: 12px 13px;
+  border: 1px solid #cbd8d0;
+  border-radius: 7px;
+  background: #fff;
+  color: #183333;
+  font: inherit;
+  font-size: 15px;
+}
+
+.currency-input-wrap {
+  position: relative;
+}
+
+.currency-input-wrap > span {
+  position: absolute;
+  top: 50%;
+  left: 14px;
+  color: #647770;
+  transform: translateY(-50%);
+}
+
+.currency-input-wrap input {
+  padding-left: 31px !important;
+}
+
+.answer-field textarea {
+  min-height: 108px;
+  resize: vertical;
+}
+
+.answer-field input:focus,
+.answer-field textarea:focus {
+  border-color: var(--green);
+  outline: 3px solid rgba(8, 122, 104, 0.15);
+}
+
+.answer-field [aria-invalid="true"] {
+  border-color: #a6382b !important;
+}
+
+.choice-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.choice-option {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d9e4dc;
+  border-radius: 8px;
+  background: #fff;
+  color: #334e45;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.choice-option:has(input:checked) {
+  border-color: #55a68b;
+  background: #eef7f0;
+  color: #184d3b;
+}
+
+.choice-option input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+  accent-color: var(--green);
+}
+
+.choice-option:focus-within {
+  outline: 3px solid #d06f50;
+  outline-offset: 2px;
+}
+
+.field-help,
+.follow-up-note,
+.prior-value-note {
+  margin: 8px 0 0;
+  color: #60736c;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.prior-value-note {
+  display: inline-block;
+  padding: 9px 12px;
+  border-radius: 7px;
+  background: #eef5f0;
+}
+
+.field-error {
+  margin: 7px 0 0;
+  color: #a6382b;
+  font-size: 12px;
+}
+
+.question-nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.text-button {
+  padding: 6px 0;
+  border: 0;
+  background: transparent;
+  color: #08705f;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.text-button:focus-visible {
+  outline: 3px solid #d06f50;
+  outline-offset: 3px;
+}
+
+.demo-returning-link {
+  display: block;
+  margin-top: 18px;
+}
+
+.save-status-error {
+  color: #a6382b;
+}
+
+.save-error-message {
+  margin-bottom: 22px;
+  padding: 12px 15px;
+  border: 1px solid #e7c4bd;
+  border-radius: 8px;
+  background: #fff7f5;
+  color: #87352b;
+  font-size: 13px;
+}
+
+.review-card h1,
+.completion-content h1 {
+  margin-bottom: 12px;
+  color: #173b37;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 600;
+  letter-spacing: -0.05em;
+  line-height: 1.2;
+}
+
+.review-sections {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  margin-top: 27px;
+}
+
+.review-required-note {
+  margin: 20px 0 0;
+  padding: 12px 14px;
+  border: 1px solid #e8c9bd;
+  border-radius: 8px;
+  background: #fff7f3;
+  color: #7f392b;
+  font-size: 13px;
+}
+
+.review-section {
+  padding: 17px 19px;
+  border: 1px solid #dfe8e1;
+  border-radius: 10px;
+  background: white;
+}
+
+.review-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.review-section-heading h2 {
+  margin: 0;
+  color: #24463c;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-size: 15px;
+}
+
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 9px 0;
+  border-top: 1px solid #edf1ed;
+  color: #61716b;
+  font-size: 13px;
+}
+
+.review-row strong {
+  max-width: 60%;
+  color: #29483e;
+  font-weight: 600;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.developer-panel {
+  margin-top: 30px;
+  padding: 15px 17px;
+  border: 1px dashed #9fb5a8;
+  border-radius: 9px;
+  background: #f3f7f3;
+}
+
+.developer-panel pre {
+  max-height: 350px;
+  overflow: auto;
+  padding: 13px;
+  border-radius: 6px;
+  background: #19312d;
+  color: #e6f5eb;
+  font-size: 11px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.developer-reset {
+  display: block;
+  margin-top: 10px;
+  color: #8b3429;
+}
+
+.completion-content {
+  display: flex;
+  width: min(680px, calc(100% - 40px));
+  flex-direction: column;
+  align-items: flex-start;
+  margin: 0 auto;
+  padding: clamp(45px, 9vh, 100px) 0;
+}
+
+.completion-content > p:not(.eyebrow) {
+  max-width: 550px;
+  color: #60716c;
+  line-height: 1.7;
+}
+
+.completion-check {
+  display: grid;
+  width: 54px;
+  height: 54px;
+  margin-bottom: 24px;
+  place-items: center;
+  border-radius: 50%;
+  background: #e4f4ee;
+  color: var(--green);
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.completion-content .estimate-card {
+  width: min(100%, 390px);
+  margin: 14px 0 23px;
+}
+
+.estimate-range {
+  margin: 0 0 3px !important;
+  color: #1a5540 !important;
+  font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+  font-size: 24px !important;
+  font-weight: 700;
+}
+
+.estimate-source-note {
+  margin-top: 7px !important;
+  font-size: 10px !important;
+}
+
 @media (max-width: 760px) {
   .welcome-content {
     grid-template-columns: 1fr;
@@ -641,6 +1054,11 @@ p {
     min-height: auto;
   }
 
+  .progress-item {
+    width: auto;
+    min-height: auto;
+  }
+
   .progress-label {
     position: absolute;
     width: 1px;
@@ -658,6 +1076,21 @@ p {
   .progress-caption {
     margin: 0;
     white-space: nowrap;
+  }
+
+  .question-fields.is-group,
+  .choice-list {
+    grid-template-columns: 1fr;
+  }
+
+  .review-row {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .review-row strong {
+    max-width: 100%;
+    text-align: left;
   }
 
   .sidebar-estimate {

@@ -1,11 +1,13 @@
-import { sections } from "../config/sections";
+import { sections, type SectionId } from "../config/survey";
 import { getProgressPercent } from "../utils/progress";
 
 type SectionProgressProps = {
-  activeIndex: number;
+  activeSection: SectionId;
+  onSelect?: (section: SectionId) => void;
 };
 
-export function SectionProgress({ activeIndex }: SectionProgressProps) {
+export function SectionProgress({ activeSection, onSelect }: SectionProgressProps) {
+  const activeIndex = sections.findIndex((section) => section.id === activeSection);
   const progress = getProgressPercent(activeIndex + 1, sections.length);
 
   return (
@@ -17,18 +19,19 @@ export function SectionProgress({ activeIndex }: SectionProgressProps) {
 
           return (
             <li key={section.id}>
-              <span
-                className={`progress-marker${current ? " is-current" : ""}${complete ? " is-complete" : ""}`}
-                aria-hidden="true"
-              >
-                {complete ? "✓" : index + 1}
-              </span>
-              <span
-                className="progress-label"
+              <button
+                className="progress-item"
                 aria-current={current ? "step" : undefined}
+                onClick={() => onSelect?.(section.id)}
               >
-                {section.label}
-              </span>
+                <span
+                  className={`progress-marker${current ? " is-current" : ""}${complete ? " is-complete" : ""}`}
+                  aria-hidden="true"
+                >
+                  {complete ? "✓" : index + 1}
+                </span>
+                <span className="progress-label">{section.label}</span>
+              </button>
             </li>
           );
         })}
@@ -43,9 +46,7 @@ export function SectionProgress({ activeIndex }: SectionProgressProps) {
       >
         <span style={{ width: `${progress}%` }} />
       </div>
-      <p className="progress-caption">
-        Step {activeIndex + 1} of {sections.length}
-      </p>
+      <p className="progress-caption">{sections[activeIndex]?.label ?? "Survey progress"}</p>
     </nav>
   );
 }
