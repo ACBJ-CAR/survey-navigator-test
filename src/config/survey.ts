@@ -1,3 +1,5 @@
+import { getClassificationPayload, getIndustryModulePlan, industryModuleRules, type IndustryClassification } from "./industry";
+
 export type SectionId =
   | "company"
   | "business-details"
@@ -133,9 +135,17 @@ const services = [
 ].map((label) => ({ label, value: label }));
 
 const accountingCondition: Condition = {
-  field: "industry",
-  operator: "equals",
-  value: "accounting",
+  all: [
+    { field: "industry", operator: "equals", value: "accounting" },
+    {
+      any: [
+        { field: "industryClassificationStatus", operator: "equals", value: "respondent_confirmed" },
+        { field: "industryClassificationStatus", operator: "equals", value: "respondent_updated" },
+        { field: "industryClassificationStatus", operator: "equals", value: "respondent_selected" },
+        { field: "industryClassificationStatus", operator: "equals", value: "researcher_verified" },
+      ],
+    },
+  ],
 };
 
 const isReturning: Condition = {
@@ -583,26 +593,10 @@ export const surveyQuestions: SurveyQuestion[] = [
     dataFieldId: "industry",
     moduleId: "industry-identification",
     section: "industry",
-    respondentLabel: "Which best describes the work your business does?",
-    questionType: "singleSelect",
+    respondentLabel: "What does your company do?",
+    questionType: "group",
     requiredStatus: "required",
-    helpText: "This short list is for demonstration only; a complete industry and specialty taxonomy is deferred.",
-    fields: [field("industry", "Choose one", "singleSelect", [
-      { label: "Accounting", value: "accounting" },
-      { label: "Another kind of business", value: "other" },
-      { label: "I’m not sure", value: "unsure" },
-    ], { required: true })],
-  },
-  {
-    questionId: "other-industry",
-    dataFieldId: "industry_description",
-    moduleId: "industry-identification",
-    section: "industry",
-    respondentLabel: "What kind of business do you have?",
-    questionType: "text",
-    requiredStatus: "optional",
-    displayCondition: { field: "industry", operator: "equals", value: "other" },
-    fields: [field("industryDescription", "Business type", "text")],
+    fields: [],
   },
   {
     questionId: "accounting-staff",
@@ -903,13 +897,21 @@ export function evaluateCondition(
 }
 
 export function getVisibleQuestions(answers: Record<string, unknown>) {
-  return surveyQuestions.filter((question) => evaluateCondition(question.displayCondition, answers));
+  const activeModules = new Set(
+    getIndustryModulePlan(answers.industryClassification as IndustryClassification | undefined).activeModuleIds,
+  );
+  return surveyQuestions.filter((question) =>
+    evaluateCondition(question.displayCondition, answers) &&
+    (!industryModuleRules.some((rule) => rule.moduleId === question.moduleId) || activeModules.has(question.moduleId)),
+  );
 }
 
 export function getConfigurationDiagnostics() {
   const knownAnswerIds = new Set([
     "respondentType",
     "priorOwnershipDescriptor",
+    "industry",
+    "industryClassificationStatus",
     ...surveyQuestions.flatMap((question) => (question.fields ?? []).map((field) => field.id)),
   ]);
   const conditionFields = (condition: Condition | undefined): string[] => {
@@ -934,7 +936,7 @@ export function normalizeExclusiveSelection(value: string[], changed: string, ex
   return [changed];
 }
 
-export function buildSubmissionPayload(answers: Record<string, unknown>) {
+export function buildSubmissionPayload(answers: Record<string, unknown>): Record<string, unknown> {
   const activeFieldIds = new Set(
     getVisibleQuestions(answers).flatMap((question) =>
       (question.fields ?? []).map((questionField) => questionField.id),
@@ -957,8 +959,7 @@ export function buildSubmissionPayload(answers: Record<string, unknown>) {
     activeFieldIds.add("localFoundedYear");
   }
 
-  return Object.fromEntries(
-    surveyQuestions
+  const payload: Record<string, unknown> = Object.fromEntries(surveyQuestions
       .filter((question) => question.moduleId !== "editorial")
       .flatMap((question) =>
         (question.fields ?? []).flatMap((questionField) => {
@@ -968,8 +969,11 @@ export function buildSubmissionPayload(answers: Record<string, unknown>) {
             ? []
             : [[questionField.dataFieldId, value]];
         }),
-      ),
-  );
+      ));
+  return {
+    ...payload,
+    ...getClassificationPayload(answers.industryClassification as IndustryClassification | undefined),
+  };
 }
 
 export function toDataFieldId(fieldId: string) {

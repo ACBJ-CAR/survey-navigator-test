@@ -19,10 +19,9 @@ and saves progress locally so a respondent can return to the same question.
 
 The formal v1 product specification in
 [`prompts/acbj_survey_navigator_specs.md`](./prompts/acbj_survey_navigator_specs.md)
-is the source of truth. The application includes a limited accounting proof of
-concept and a generic “another kind of business” path; it does not include a
-complete industry or specialty taxonomy, production NAICS mapping, or a
-production valuation formula.
+is the source of truth. This v1.1 iteration adds a configurable priority
+industry taxonomy and classification workflow. It is not a complete industry
+inventory, production NAICS mapping, or production valuation formula.
 
 ## Data sources
 
@@ -48,9 +47,11 @@ The browser application uses React, TypeScript, and Vite. Node.js 20.19+ or
 3. **Business details** — operating footprint, offices, leadership and survey
    contact, employee and revenue details, founding years, ownership structure
    and optional ownership description. Follow-ups appear only when relevant.
-4. **Your industry** — choose the accounting demonstration path, another kind
-   of business, or “I’m not sure.” Accounting-specific staff, service and
-   editorial questions appear only for accounting respondents.
+4. **Your industry** — search or browse the priority taxonomy, choose a
+   primary and optional secondary industry, and add a specialty when available.
+   Other and “I’m not sure” paths allow manual review without guessing a
+   classification. Accounting-specific questions appear only for a confirmed
+   Accounting primary industry.
 5. **What’s ahead** — select plans for the next 12 months and answer only the
    corresponding short follow-ups.
 6. **Review** — review completed answers, edit a section without restarting,
@@ -68,6 +69,10 @@ revenue fields are eligible inputs.
   requiredness, help, prior values and reusable equality/inclusion/compound
   display conditions. New questions and branches should be added here rather
   than wired into a hard-coded page sequence.
+- `src/config/industry.ts` owns the versioned industry taxonomy, approved
+  NAICS crosswalk candidates, reporting-scope labels, module eligibility
+  rules, search helpers and taxonomy validation. `IndustryClassification`
+  renders respondent choices from this configuration.
 - `src/components/QuestionCard.tsx` renders configured question groups and
   validates required, year, number, currency, email, phone and URL answers.
 - `src/state/storage.ts` isolates local prototype persistence. It uses browser
@@ -89,8 +94,8 @@ invented in the prototype.
   browsers or devices.
 - The “returning business” action loads an illustrative synthetic sample
   record; it is not ACBJ company data.
-- The accounting module is a Honolulu proof of concept, not a complete
-  accounting or industry inventory.
+- The priority industry inventory is an extensible starting point, not a
+  complete taxonomy. The Accounting module remains a Honolulu proof of concept.
 - Contact capture supports the executive, survey contact and adding one
   additional contact. Production contact-record management and authentication
   are not implemented.
@@ -99,6 +104,57 @@ invented in the prototype.
   remain deferred.
 - Production data APIs, final ACBJ field mappings, complete NAICS/industry
   classifications and final brand/legal review remain deferred.
+
+## v1.1 industry configuration
+
+The taxonomy is configured in `src/config/industry.ts` under version
+`survey-navigator-industry-1.1.0`. Nodes have stable IDs, parent IDs, levels
+(`broad`, `industry`, `specialty`), respondent labels, descriptions, synonyms,
+status, selection behavior, specialty requirements, module tags, display order
+and effective dates. IDs are internal integration keys: do not display them to
+respondents or repurpose an ID for a different business meaning. Retire a
+changed concept and add a new ID instead.
+
+Reporting scope is stored with each classification as local operation,
+companywide or specific establishment. The default is companywide. Help text
+asks respondents to classify what the company does, rather than the industries
+its customers represent.
+
+`naicsCrosswalk` is versioned to the 2022 NAICS vintage and supports multiple
+candidate codes, specialties, relationships, separate use cases, review status,
+effective dates and notes. Only the approved Accounting sourcing candidates
+541211 (Office of Certified Public Accountants) and 541219 (Other Accounting
+Services) are seeded. They are internal-only and never appear in respondent
+screens or the respondent payload. No detailed mapping is inferred from a
+broad category. `naicsMappingReviewQueue` records remaining unmapped taxonomy
+nodes as draft review work with no assigned code; this avoids fabricating
+candidates before source verification. Do not treat draft work as approved
+sourcing or eligibility rules.
+
+`industryModuleRules` identify enabled modules, survey/market enablement,
+compatible reporting scopes, qualifying primary industries or specialties, and
+whether secondary classifications may load that module. The question renderer
+uses the same rule plan to filter module questions. Adding an industry or a
+specialty requires taxonomy data and tests, not a component branch.
+
+Other and unsure classifications use the `other_unmapped` and
+`unsure_manual_review` states and create manual-review items. Prior values stay
+unconfirmed until the respondent confirms them; changes are retained in
+classification history. Hidden module answers remain in saved audit state but
+are excluded from active validation, review and submission. Re-selecting a
+compatible classification makes the preserved answers available again.
+
+Existing v1 local saves remain readable. Their legacy industry strings are not
+automatically translated into taxonomy IDs or treated as confirmed; respondents
+select or confirm a classification in the new flow before an industry module
+can load.
+
+Run `validateIndustryConfiguration()` in tests/build checks when extending the
+taxonomy. It checks IDs, parent/level relationships, cycles, labels, sibling
+duplicates, module references, NAICS vintage/relationships and effective
+dates. Add crosswalk candidates only after source verification, retain draft
+status until approved, and include tests for respondent-safe output and module
+eligibility.
 
 ## Stakeholder testing guide
 
@@ -110,8 +166,9 @@ invented in the prototype.
 - Choose subsidiary, holding-company and investment-backed ownership
   structures, then change the structure and verify irrelevant follow-ups leave
   the active review/submission.
-- Compare the Accounting and “Another kind of business” paths. Only accounting
-  should see accounting questions or newsroom prompts.
+- Search for a configured specialty, browse to its parent industry, and verify
+  stable classification behavior. Confirm Accounting to see its configured
+  module; use Other and “I’m not sure” to verify no industry module loads.
 - Select hiring or other outlook plans, then revise the selections and confirm
   only relevant follow-ups remain.
 - Refresh after answering and use **Resume survey** to confirm the response
