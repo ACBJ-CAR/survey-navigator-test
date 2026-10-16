@@ -9,6 +9,18 @@ afterEach(() => {
   }
 });
 
+function saveAtIndustry(answers: Record<string, unknown> = {}) {
+  window.localStorage.setItem(
+    "acbj-survey-navigator-v1",
+    JSON.stringify({
+      version: 1,
+      screen: "survey",
+      currentQuestionId: "industry",
+      answers: { respondentType: "new", industryPhase: "browse", ...answers },
+    }),
+  );
+}
+
 describe("ACBJ Survey Navigator question flow", () => {
   it("starts a new respondent on a specific company question", async () => {
     const user = userEvent.setup();
@@ -141,5 +153,154 @@ describe("ACBJ Survey Navigator question flow", () => {
     expect(screen.getByText("business_name")).toBeInTheDocument();
     expect(screen.getByText(/browser localStorage \(prototype\)/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /reset prototype data/i })).toBeInTheDocument();
+  });
+
+  it("searches by a specialty term and loads Accounting only after classification is completed", async () => {
+    saveAtIndustry();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    await user.type(screen.getByRole("searchbox", { name: /search by industry/i }), "bookkeeping");
+    await user.click(await screen.findByRole("button", { name: /Accounting — Bookkeeping-focused firm/i }));
+    await user.click(screen.getByRole("radio", { name: "Bookkeeping-focused firm" }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    await user.click(screen.getByRole("radio", { name: "No" }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+
+    expect(screen.getByRole("heading", { name: /learn about your professional team/i })).toBeInTheDocument();
+  });
+
+  it("requires a useful Other description and then continues without an industry module", async () => {
+    saveAtIndustry();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    await user.click(screen.getByRole("button", { name: /professional, scientific & business services/i }));
+    await user.click(screen.getByRole("button", { name: /another business in this category/i }));
+    await user.click(screen.getByRole("button", { name: /^continue/i }));
+    expect(screen.getByRole("alert")).toHaveTextContent(/few words/i);
+
+    await user.type(screen.getByRole("textbox", { name: /describe what your company/i }), "We restore historic buildings");
+    await user.click(screen.getByRole("button", { name: /^continue/i }));
+    expect(screen.getByRole("heading", { name: /during the next 12 months/i })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /professional team/i })).not.toBeInTheDocument();
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem("acbj-survey-navigator-v1") ?? "{}");
+      expect(saved.answers.industryClassification.primary.broadIndustryId).toBe("broad.professional-business-services");
+      expect(saved.answers.industryClassification.primary.industryId).toBeNull();
+      expect(saved.answers.industryClassification.manualReviewItems).toContain("industry.other_unmapped");
+      expect(saved.answers.industryClassification.otherDescription).toBe("We restore historic buildings");
+    });
+  });
+
+  it("records global Something else without creating taxonomy selections", async () => {
+    saveAtIndustry();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    await user.click(screen.getByRole("button", { name: /something else/i }));
+    await user.type(screen.getByRole("textbox", { name: /describe what your company/i }), "We provide community mediation");
+    await user.click(screen.getByRole("button", { name: /^continue/i }));
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem("acbj-survey-navigator-v1") ?? "{}");
+      expect(saved.answers.industryClassification.status).toBe("other_unmapped");
+      expect(saved.answers.industryClassification.primary).toBeNull();
+      expect(saved.answers.industryClassification.secondary).toEqual([]);
+    });
+  });
+
+  it("allows an unsure classification to continue without guessing", async () => {
+    saveAtIndustry();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    await user.click(screen.getByRole("button", { name: /i’m not sure/i }));
+    await user.click(screen.getByRole("button", { name: /^continue/i }));
+    expect(screen.getByRole("heading", { name: /during the next 12 months/i })).toBeInTheDocument();
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem("acbj-survey-navigator-v1") ?? "{}");
+      expect(saved.answers.industryClassification.status).toBe("unsure_manual_review");
+      expect(saved.answers.industryClassification.primary).toBeNull();
+      expect(saved.answers.industryClassification.manualReviewItems).toContain("industry.unsure_manual_review");
+    });
+  });
+
+  it("supports keyboard activation for the unsure path", async () => {
+    saveAtIndustry();
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    const unsure = screen.getByRole("button", { name: /i’m not sure/i });
+    unsure.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getByRole("heading", { name: /what does the company make, sell or do/i })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /in a few words/i })).toBeInTheDocument();
+  });
+
+  it("asks respondents to confirm a prior classification before loading its module", async () => {
+    const priorClassification = {
+      classificationId: "sample-prior",
+      reportingScope: "companywide",
+      taxonomyVersion: "survey-navigator-industry-1.1.0",
+      primary: { broadIndustryId: "broad.professional-business-services", industryId: "industry.accounting", specialtyIds: [] },
+      secondary: [],
+      status: "prior_unconfirmed",
+      source: "prior_record",
+      otherDescription: "",
+      uncertaintyNote: "",
+      naicsVintage: "2022",
+      naicsCandidates: [],
+      activeModuleIds: [],
+      manualReviewItems: [],
+      history: [],
+    };
+    saveAtIndustry({ industryPhase: undefined, industryClassification: priorClassification, industryClassificationStatus: "prior_unconfirmed" });
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    expect(screen.queryByRole("heading", { name: /professional team/i })).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: /yes, confirm it/i }));
+    expect(screen.getByRole("heading", { name: /professional team/i })).toBeInTheDocument();
+  });
+
+  it("retains the prior classification history when it is updated and resumes the active module", async () => {
+    const priorClassification = {
+      classificationId: "sample-prior",
+      reportingScope: "companywide",
+      taxonomyVersion: "survey-navigator-industry-1.1.0",
+      primary: { broadIndustryId: "broad.professional-business-services", industryId: "industry.accounting", specialtyIds: [] },
+      secondary: [],
+      status: "prior_unconfirmed",
+      source: "prior_record",
+      otherDescription: "",
+      uncertaintyNote: "",
+      naicsVintage: "2022",
+      naicsCandidates: [],
+      activeModuleIds: [],
+      manualReviewItems: [],
+      history: [],
+    };
+    saveAtIndustry({ industryPhase: undefined, industryClassification: priorClassification, industryClassificationStatus: "prior_unconfirmed" });
+    const user = userEvent.setup();
+    const first = render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    await user.click(screen.getByRole("button", { name: /^update it$/i }));
+    await user.type(screen.getByRole("searchbox", { name: /search by industry/i }), "accounting");
+    await user.click(screen.getByRole("button", { name: /Accounting/ }));
+    await user.click(screen.getByRole("radio", { name: "CPA firm" }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    await user.click(screen.getByRole("radio", { name: "No" }));
+    await user.click(screen.getByRole("button", { name: /continue/i }));
+    expect(screen.getByRole("heading", { name: /professional team/i })).toBeInTheDocument();
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem("acbj-survey-navigator-v1") ?? "{}");
+      expect(saved.answers.industryClassification.status).toBe("respondent_updated");
+      expect(saved.answers.industryClassification.history).toHaveLength(1);
+    });
+    first.unmount();
+
+    render(<App />);
+    await user.click(screen.getByRole("button", { name: /resume survey/i }));
+    expect(screen.getByRole("heading", { name: /professional team/i })).toBeInTheDocument();
   });
 });
